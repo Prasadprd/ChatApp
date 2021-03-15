@@ -39,6 +39,7 @@ const autoscroll=()=>{
     }
 }
 
+// Listening to the message event
 socket.on('message',(message)=>{
     console.log(message)
     const html = Mustache.render($messageTemplate,{
@@ -51,6 +52,7 @@ socket.on('message',(message)=>{
     autoscroll()
 })
 
+// Listens for location msg event
 socket.on('locationMessage',(message)=>{
     //console.log(url)
     const html = Mustache.render($locationMessageTemplate,{
@@ -62,17 +64,21 @@ socket.on('locationMessage',(message)=>{
     autoscroll()
 })
 
+// Listens for roomData event.This event renders the users in room on the page
 socket.on('roomData',({room,users})=>{
     const html =Mustache.render(sidebarTemplate,{
         room,users
     })
     $sidebar.innerHTML=html
 })
+
+// Creating a event listener to submit button in the send msg form
 $messageForm.addEventListener('submit',(e)=>{
     e.preventDefault()
-    $messageFormButton.setAttribute('disabled','disabled')
+    $messageFormButton.setAttribute('disabled','disabled')  
     const message = e.target.elements.message.value
 
+    // Emiting the send message event when a user type a message and click on submit
     socket.emit('sendMessage',message,(error)=>{
         $messageFormButton.removeAttribute('disabled')
         $messageFormInput.value =''
@@ -85,6 +91,7 @@ $messageForm.addEventListener('submit',(e)=>{
     })
 })
 
+// Creating a event listener when a user clicks on send location button
 $sendLocationButton.addEventListener('click',(e)=>{
     e.preventDefault()
 
@@ -92,11 +99,15 @@ $sendLocationButton.addEventListener('click',(e)=>{
         return alert('Location cannot be shared')
     }
     $sendLocationButton.setAttribute('disabled','disabled')
+
+    // this function is provided by the browser to get some data like location of the user
     navigator.geolocation.getCurrentPosition((position)=>{
         const message = {
             latitude : position.coords.latitude,
             longitude : position.coords.longitude
         }
+
+        // Emiting sendLocation event when user clicks on send location button
         socket.emit('sendLocation',message,()=>{
             $sendLocationButton.removeAttribute('disabled')
             console.log('Location shared')
@@ -104,6 +115,7 @@ $sendLocationButton.addEventListener('click',(e)=>{
     })
 })
 
+// Emiting join event when a user join a room with a specific username and room
 socket.emit('join',{username,room},(error)=>{
     if(error){
         alert(error)
